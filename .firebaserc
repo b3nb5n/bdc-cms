@@ -1,7 +1,0 @@
-{
-  "projects": {
-    "default": "content-management-syste-a9a11",
-    "development": "content-management-system-dev",
-    "production": "content-management-syste-a9a11"
-  }
-}
