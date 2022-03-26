@@ -16,9 +16,9 @@ const (
 )
 
 type ResourceMeta struct {
-	Created time.Time `bson:"created"`
-	Edited time.Time `bson:"edited"`
-	Visibility Visibility `bson:"visibility"`
+	Created time.Time `bson:"created" json:"created"`
+	Edited time.Time `bson:"edited" json:"edited"`
+	Visibility Visibility `bson:"visibility" json:"visibility"`
 }
 
 func NewResourceMeta() *ResourceMeta {
@@ -33,8 +33,8 @@ func (meta *ResourceMeta) MarshalJSON() ([]byte, error) {
 	type Alias ResourceMeta
 	return json.Marshal(&struct {
 		*Alias
-		Created int64 `bson:"created"`
-		Edited int64 `bson:"edited"`
+		Created int64 `bson:"created" json:"created"`
+		Edited int64 `bson:"edited" json:"edited"`
 	} {
 		Alias: (*Alias)(meta),
 		Created: meta.Created.Unix(),
@@ -47,8 +47,8 @@ func (meta *ResourceMeta) UnmarshalJSON(data []byte) error {
 	type Alias ResourceMeta
 	aux := &struct {
 		*Alias
-		Created int64 `bson:"created"`
-		Edited int64 `bson:"edited"`
+		Created int64 `bson:"created" json:"created"`
+		Edited int64 `bson:"edited" json:"edited"`
 	} {
 		Alias: (*Alias)(meta),
 	}
@@ -64,9 +64,9 @@ func (meta *ResourceMeta) UnmarshalJSON(data []byte) error {
 }
 
 type Resource[T any] struct {
-	ID Snowflake `bson:"_id"`
-	Meta ResourceMeta `bson:"meta"`
-	Data T `bson:"data"`
+	ID Snowflake `bson:"_id" json:"id"`
+	Meta ResourceMeta `bson:"meta" json:"meta"`
+	Data T `bson:"data" json:"data"`
 }
 
 func NewResource[T any](data T) (*Resource[T], error) {

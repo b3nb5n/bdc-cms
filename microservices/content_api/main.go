@@ -32,6 +32,9 @@ func main() {
 	app := fiber.New()
 
 	app.Post("/properties", PropertyPOST(client))
+	app.Get("/properties/:id", PropertyGET(client))
+	app.Delete("/properties/:id", PropertyDELETE(client))
+	app.Get("/properties", PropertiesGET(client))
 
 	app.Listen(":3000")
 }
