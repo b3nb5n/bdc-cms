@@ -9,6 +9,9 @@ import (
 
 	"shared"
 
+	"content_api/properties"
+	"content_api/properties/property"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
 )
@@ -31,10 +34,10 @@ func main() {
 
 	app := fiber.New()
 
-	app.Post("/properties", PropertyPOST(client))
-	app.Get("/properties/:id", PropertyGET(client))
-	app.Delete("/properties/:id", PropertyDELETE(client))
-	app.Get("/properties", PropertiesGET(client))
+	app.Post("/properties", properties.Post(client))
+	app.Get("/properties", properties.Get(client))
+	app.Get("/properties/:id", property.Get(client))
+	app.Delete("/properties/:id", property.Delete(client))
 
 	app.Listen(":3000")
 }
