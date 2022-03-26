@@ -4,34 +4,34 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"shared"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	endpoint := "mongodb://localhost:27017"
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading environment: %v", err)
+	}
 
+	endpoint := fmt.Sprintf("mongodb://%s:%s", os.Getenv("DB_HOST"), os.Getenv("DB_PORT"))
 	ctx, cancelDBContext := context.WithTimeout(context.Background(), 10 * time.Second)
 	defer cancelDBContext()
-	
-	client, err := mongo.NewClient(options.Client().ApplyURI(endpoint))
+
+	client, err := shared.NewDBClient(ctx, endpoint)
 	if err != nil {
-		log.Fatalf("Error connecting to database: %v", err)
-	}
-	
-	err = client.Connect(ctx)
-	if err != nil {
-		log.Fatalf("Error connecting to database: %v", err)
+		log.Fatalf("Error creating database client: %v", err)
 	}
 	defer client.Disconnect(ctx)
 
-	err = client.Ping(ctx, readpref.Primary())
-	if err != nil {
-		log.Fatalf("Error pinging db: %v", err)
-	}
+	app := fiber.New()
 
-	fmt.Println("connected")
+	app.Post("/properties", PropertyPOST(client))
+
+	app.Listen(":3000")
 }
