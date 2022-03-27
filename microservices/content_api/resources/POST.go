@@ -7,6 +7,8 @@ import (
 
 	"shared"
 
+	"content_api/utils"
+
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -31,9 +33,10 @@ func Post[T any](client *mongo.Client) func(c *fiber.Ctx) error {
 			return c.SendStatus(500)
 		}
 
-		ctx, cancelWriteCtx := context.WithTimeout(context.Background(), 10*time.Second)
+		ctx, cancelWriteCtx := context.WithTimeout(context.Background(), 6*time.Second)
 		defer cancelWriteCtx()
-		_, err = client.Database("content").Collection("properties").InsertOne(ctx, resource)
+		collection := utils.ResolveCollection(c.Path())
+		_, err = client.Database("content").Collection(collection).InsertOne(ctx, resource)
 		if err != nil {
 			return c.SendStatus(500)
 		}

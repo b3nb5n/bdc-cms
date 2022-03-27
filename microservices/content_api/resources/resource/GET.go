@@ -1,6 +1,7 @@
 package resource
 
 import (
+	"content_api/utils"
 	"context"
 	"shared"
 	"strconv"
@@ -25,7 +26,8 @@ func Get[T any](client *mongo.Client) func(c *fiber.Ctx) error {
 
 		queryCtx, cancelQueryCtx := context.WithTimeout(context.Background(), 6*time.Second)
 		defer cancelQueryCtx()
-		queryResult := client.Database("content").Collection("properties").FindOne(queryCtx, bson.M{"_id": id})
+		collection := utils.ResolveCollection(c.Path())
+		queryResult := client.Database("content").Collection(collection).FindOne(queryCtx, bson.M{"_id": id})
 		resource := new(GetResponseData[T])
 		err = queryResult.Decode(resource)
 		if err != nil {

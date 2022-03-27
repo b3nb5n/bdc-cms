@@ -1,6 +1,7 @@
 package resource
 
 import (
+	"content_api/utils"
 	"context"
 	"shared"
 	"strconv"
@@ -26,7 +27,8 @@ func Delete(client *mongo.Client) func(c *fiber.Ctx) error {
 
 		queryCtx, cancelQueryCtx := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancelQueryCtx()
-		queryResult := client.Database("content").Collection("properties").FindOneAndDelete(queryCtx, bson.M{"_id": id})
+		collection := utils.ResolveCollection(c.Path())
+		queryResult := client.Database("content").Collection(collection).FindOneAndDelete(queryCtx, bson.M{"_id": id})
 		if err = queryResult.Err(); err != nil {
 			res := shared.ErrorResponse[DeleteResponseError]{Error: "An unknown error ocurred"}
 			return shared.SendResponse[DeleteResponseData, DeleteResponseError](res, c)
