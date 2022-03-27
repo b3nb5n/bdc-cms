@@ -9,8 +9,8 @@ import (
 
 	"shared"
 
-	"content_api/resources"
-	"content_api/resources/resource"
+	"content_api/properties"
+	"content_api/properties/property"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
@@ -23,7 +23,7 @@ func main() {
 	}
 
 	endpoint := fmt.Sprintf("mongodb://%s:%s", os.Getenv("DB_HOST"), os.Getenv("DB_PORT"))
-	ctx, cancelDBContext := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancelDBContext := context.WithTimeout(context.Background(), 10 * time.Second)
 	defer cancelDBContext()
 
 	client, err := shared.NewDBClient(ctx, endpoint)
@@ -34,10 +34,10 @@ func main() {
 
 	app := fiber.New()
 
-	app.Post("/properties", resources.Post[resources.PropertyData](client))
-	app.Get("/properties", resources.Get[resources.PropertyData](client))
-	app.Get("/properties/:id", resource.Get[resources.PropertyData](client))
-	app.Delete("/properties/:id", resource.Delete(client))
+	app.Post("/properties", properties.Post(client))
+	app.Get("/properties", properties.Get(client))
+	app.Get("/properties/:id", property.Get(client))
+	app.Delete("/properties/:id", property.Delete(client))
 
 	app.Post("/collections", resources.Post[resources.CollectionData](client))
 	app.Get("/collections", resources.Get[resources.CollectionData](client))

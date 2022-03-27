@@ -1,4 +1,4 @@
-package resources
+package properties
 
 import (
 	"context"
@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"shared"
-
-	"content_api/utils"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -19,30 +17,29 @@ type PostResponseData struct {
 
 type PostResponseError string
 
-func Post[T any](client *mongo.Client) func(c *fiber.Ctx) error {
+func Post(client *mongo.Client) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-		var data T
+		var data PropertyData
 		err := json.Unmarshal(c.Body(), &data)
 		if err != nil {
 			res := shared.ErrorResponse[PostResponseError]{Error: "Invalid Body"}
 			return shared.SendResponse[PostResponseData, PostResponseError](res, c)
 		}
 
-		resource, err := shared.NewResource(data)
+		property, err := shared.NewResource(data)
 		if err != nil {
 			return c.SendStatus(500)
 		}
 
 		ctx, cancelWriteCtx := context.WithTimeout(context.Background(), 6*time.Second)
 		defer cancelWriteCtx()
-		collection := utils.ResolveCollection(c.Path())
-		_, err = client.Database("content").Collection(collection).InsertOne(ctx, resource)
+		_, err = client.Database("content").Collection("properties").InsertOne(ctx, property)
 		if err != nil {
 			return c.SendStatus(500)
 		}
 
 		res := shared.SuccessfulResponse[PostResponseData]{
-			Data: PostResponseData{ID: resource.ID},
+			Data: PostResponseData{ID: property.ID},
 		}
 		return shared.SendResponse[PostResponseData, PostResponseError](res, c)
 	}

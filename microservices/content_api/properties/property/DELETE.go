@@ -1,4 +1,4 @@
-package resource
+package property
 
 import (
 	"content_api/utils"
@@ -35,7 +35,7 @@ func Delete(client *mongo.Client) func(c *fiber.Ctx) error {
 		}
 
 		res := shared.SuccessfulResponse[DeleteResponseData] {
-			Data: DeleteResponseData {},
+			Data: struct {} {},
 		}
 		return shared.SendResponse[DeleteResponseData, DeleteResponseError](res, c)
 	}

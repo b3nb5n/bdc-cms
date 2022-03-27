@@ -1,4 +1,4 @@
-package resources
+package properties
 
 import (
 	"content_api/utils"
@@ -12,13 +12,13 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type GetResponseData[T any] []shared.Resource[T]
+type GetResponseData []Property
 
 type GetResponseError string
 
-func Get[T any](client *mongo.Client) func(c *fiber.Ctx) error {
+func Get(client *mongo.Client) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-		queryCtx, cancelQueryCtx := context.WithTimeout(context.Background(), 6*time.Second)
+		queryCtx, cancelQueryCtx := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancelQueryCtx()
 		collection := utils.ResolveCollection(c.Path())
 		queryResult, err := client.Database("content").Collection(collection).Find(queryCtx, bson.D{})
@@ -27,17 +27,17 @@ func Get[T any](client *mongo.Client) func(c *fiber.Ctx) error {
 		}
 		defer queryResult.Close(context.Background())
 
-		resources := make(GetResponseData[T], 0)
-		decodeCtx, cancelDecodeCtx := context.WithTimeout(context.Background(), time.Second)
+		documents := make([]Property, 0)
+		decodeCtx, cancelDecodeCtx := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancelDecodeCtx()
-		err = queryResult.All(decodeCtx, &resources)
+		err = queryResult.All(decodeCtx, &documents)
 		if err != nil {
 			return c.SendStatus(500)
 		}
 
-		res := shared.SuccessfulResponse[GetResponseData[T]] {
-			Data: resources,
+		res := shared.SuccessfulResponse[GetResponseData] {
+			Data: documents,
 		}
-		return shared.SendResponse[GetResponseData[T], GetResponseError](res, c)
+		return shared.SendResponse[GetResponseData, GetResponseError](res, c)
 	}
 }
