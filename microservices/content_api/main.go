@@ -9,10 +9,8 @@ import (
 
 	"shared"
 
-	"content_api/collections"
-	"content_api/collections/collection"
-	"content_api/properties"
-	"content_api/properties/property"
+	"content_api/resources"
+	"content_api/resources/resource"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
@@ -34,17 +32,18 @@ func main() {
 	}
 	defer client.Disconnect(ctx)
 
+	db := client.Database("content")
 	app := fiber.New()
 
-	app.Post("/properties", properties.Post(client))
-	app.Get("/properties", properties.Get(client))
-	app.Get("/properties/:id", property.Get(client))
-	app.Delete("/properties/:id", property.Delete(client))
+	app.Post("/properties", resources.Post[resources.PropertyData](db))
+	app.Get("/properties", resources.Get[resources.PropertyData](db))
+	app.Get("/properties/:id", resource.Get[resources.PropertyData](db))
+	app.Delete("/properties/:id", resource.Delete(db))
 
-	app.Post("/properties", collections.Post(client))
-	app.Get("/properties", collections.Get(client))
-	app.Get("/properties/:id", collection.Get(client))
-	app.Delete("/properties/:id", collection.Delete(client))
-	
+	app.Post("/collections", resources.Post[resources.CollectionData](db))
+	app.Get("/collections", resources.Get[resources.CollectionData](db))
+	app.Get("/collections/:id", resource.Get[resources.CollectionData](db))
+	app.Delete("/collections/:id", resource.Delete(db))
+
 	app.Listen(":3000")
 }

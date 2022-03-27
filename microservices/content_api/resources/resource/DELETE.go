@@ -1,7 +1,7 @@
-package property
+package resource
 
 import (
-	"content_api/properties"
+	"content_api/utils"
 	"context"
 	"shared"
 	"strconv"
@@ -16,7 +16,7 @@ type DeleteResponseData struct {}
 
 type DeleteResponseError string
 
-func Delete(client *mongo.Client) func(c *fiber.Ctx) error {
+func Delete(db *mongo.Database) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		idParam := c.Params("id")
 		id, err := strconv.ParseInt(idParam, 10, 64)
@@ -27,14 +27,15 @@ func Delete(client *mongo.Client) func(c *fiber.Ctx) error {
 
 		queryCtx, cancelQueryCtx := context.WithTimeout(context.Background(), 6*time.Second)
 		defer cancelQueryCtx()
-		queryResult := client.Database("content").Collection(properties.COLLECTION).FindOneAndDelete(queryCtx, bson.M{"_id": id})
+		collection := utils.ResolveCollection(c.Path())
+		queryResult := db.Collection(collection).FindOneAndDelete(queryCtx, bson.M{"_id": id})
 		if err = queryResult.Err(); err != nil {
 			res := shared.ErrorResponse[DeleteResponseError]{Error: "An unknown error ocurred"}
 			return shared.SendResponse[DeleteResponseData, DeleteResponseError](res, c)
 		}
 
 		res := shared.SuccessfulResponse[DeleteResponseData] {
-			Data: struct {} {},
+			Data: DeleteResponseData {},
 		}
 		return shared.SendResponse[DeleteResponseData, DeleteResponseError](res, c)
 	}
