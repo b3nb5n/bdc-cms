@@ -39,5 +39,10 @@ func main() {
 	app.Get("/properties/:id", resource.Get[resources.PropertyData](client))
 	app.Delete("/properties/:id", resource.Delete(client))
 
+	app.Post("/collections", resources.Post[resources.CollectionData](client))
+	app.Get("/collections", resources.Get[resources.CollectionData](client))
+	app.Get("/collections/:id", resource.Get[resources.CollectionData](client))
+	app.Delete("/collections/:id", resource.Delete(client))
+
 	app.Listen(":3000")
 }
