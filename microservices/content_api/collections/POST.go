@@ -1,4 +1,4 @@
-package properties
+package collections
 
 import (
 	"context"
@@ -19,14 +19,14 @@ type PostResponseError string
 
 func Post(client *mongo.Client) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-		data := new(PropertyData)
+		data := new(CollectionData)
 		err := json.Unmarshal(c.Body(), &data)
 		if err != nil {
 			res := shared.ErrorResponse[PostResponseError]{Error: "Invalid Body"}
 			return shared.SendResponse[PostResponseData, PostResponseError](res, c)
 		}
 
-		property, err := shared.NewResource(data)
+		property, err := shared.NewResource(*data)
 		if err != nil {
 			return c.SendStatus(500)
 		}

@@ -7,3 +7,5 @@ type PropertyData struct {
 }
 
 type Property shared.Resource[PropertyData]
+
+const COLLECTION = "properties"

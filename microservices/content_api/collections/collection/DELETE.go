@@ -1,7 +1,7 @@
-package property
+package collection
 
 import (
-	"content_api/properties"
+	"content_api/collections"
 	"context"
 	"shared"
 	"strconv"
@@ -27,14 +27,14 @@ func Delete(client *mongo.Client) func(c *fiber.Ctx) error {
 
 		queryCtx, cancelQueryCtx := context.WithTimeout(context.Background(), 6*time.Second)
 		defer cancelQueryCtx()
-		queryResult := client.Database("content").Collection(properties.COLLECTION).FindOneAndDelete(queryCtx, bson.M{"_id": id})
+		queryResult := client.Database("content").Collection(collections.COLLECTION).FindOneAndDelete(queryCtx, bson.M{"_id": id})
 		if err = queryResult.Err(); err != nil {
 			res := shared.ErrorResponse[DeleteResponseError]{Error: "An unknown error ocurred"}
 			return shared.SendResponse[DeleteResponseData, DeleteResponseError](res, c)
 		}
 
 		res := shared.SuccessfulResponse[DeleteResponseData] {
-			Data: struct {} {},
+			Data: DeleteResponseData {},
 		}
 		return shared.SendResponse[DeleteResponseData, DeleteResponseError](res, c)
 	}

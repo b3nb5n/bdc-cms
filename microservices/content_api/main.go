@@ -9,6 +9,8 @@ import (
 
 	"shared"
 
+	"content_api/collections"
+	"content_api/collections/collection"
 	"content_api/properties"
 	"content_api/properties/property"
 
@@ -39,10 +41,10 @@ func main() {
 	app.Get("/properties/:id", property.Get(client))
 	app.Delete("/properties/:id", property.Delete(client))
 
-	app.Post("/collections", resources.Post[resources.CollectionData](client))
-	app.Get("/collections", resources.Get[resources.CollectionData](client))
-	app.Get("/collections/:id", resource.Get[resources.CollectionData](client))
-	app.Delete("/collections/:id", resource.Delete(client))
-
+	app.Post("/properties", collections.Post(client))
+	app.Get("/properties", collections.Get(client))
+	app.Get("/properties/:id", collection.Get(client))
+	app.Delete("/properties/:id", collection.Delete(client))
+	
 	app.Listen(":3000")
 }

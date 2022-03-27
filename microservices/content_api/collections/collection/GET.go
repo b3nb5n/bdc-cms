@@ -1,7 +1,7 @@
-package property
+package collection
 
 import (
-	"content_api/properties"
+	"content_api/collections"
 	"context"
 	"shared"
 	"strconv"
@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type GetResponseData properties.Property
+type GetResponseData collections.Collection
 
 type GetResponseError string
 
@@ -27,7 +27,7 @@ func Get(client *mongo.Client) func(c *fiber.Ctx) error {
 
 		queryCtx, cancelQueryCtx := context.WithTimeout(context.Background(), 6*time.Second)
 		defer cancelQueryCtx()
-		queryResult := client.Database("content").Collection(properties.COLLECTION).FindOne(queryCtx, bson.M{"_id": id})
+		queryResult := client.Database("content").Collection(collections.COLLECTION).FindOne(queryCtx, bson.M{"_id": id})
 		data := new(GetResponseData)
 		err = queryResult.Decode(&data)
 		if err != nil {

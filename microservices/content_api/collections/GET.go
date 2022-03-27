@@ -1,4 +1,4 @@
-package properties
+package collections
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type GetResponseData []Property
+type GetResponseData []Collection
 
 type GetResponseError string
 
@@ -19,7 +19,7 @@ func Get(client *mongo.Client) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		queryCtx, cancelQueryCtx := context.WithTimeout(context.Background(), 6*time.Second)
 		defer cancelQueryCtx()
-		queryResult, err := client.Database("content").Collection(COLLECTION).Find(queryCtx, bson.M{})
+		queryResult, err := client.Database("content").Collection(COLLECTION).Find(queryCtx, bson.D{})
 		if err != nil {
 			return c.SendStatus(500)
 		}
