@@ -1,4 +1,4 @@
-package properties
+package resources
 
 import (
 	"context"
@@ -17,29 +17,29 @@ type PostResponseData struct {
 
 type PostResponseError string
 
-func Post(client *mongo.Client) func(c *fiber.Ctx) error {
+func Post[T any](client *mongo.Client) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-		var data PropertyData
+		var data T
 		err := json.Unmarshal(c.Body(), &data)
 		if err != nil {
 			res := shared.ErrorResponse[PostResponseError]{Error: "Invalid Body"}
 			return shared.SendResponse[PostResponseData, PostResponseError](res, c)
 		}
 
-		property, err := shared.NewResource(data)
+		resource, err := shared.NewResource(data)
 		if err != nil {
 			return c.SendStatus(500)
 		}
 
 		ctx, cancelWriteCtx := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancelWriteCtx()
-		_, err = client.Database("content").Collection("properties").InsertOne(ctx, property)
+		_, err = client.Database("content").Collection("properties").InsertOne(ctx, resource)
 		if err != nil {
 			return c.SendStatus(500)
 		}
 
 		res := shared.SuccessfulResponse[PostResponseData]{
-			Data: PostResponseData{ID: property.ID},
+			Data: PostResponseData{ID: resource.ID},
 		}
 		return shared.SendResponse[PostResponseData, PostResponseError](res, c)
 	}

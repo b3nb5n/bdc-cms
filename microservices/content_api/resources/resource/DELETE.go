@@ -1,4 +1,4 @@
-package property
+package resource
 
 import (
 	"context"
@@ -33,7 +33,7 @@ func Delete(client *mongo.Client) func(c *fiber.Ctx) error {
 		}
 
 		res := shared.SuccessfulResponse[DeleteResponseData] {
-			Data: struct {} {},
+			Data: DeleteResponseData {},
 		}
 		return shared.SendResponse[DeleteResponseData, DeleteResponseError](res, c)
 	}
