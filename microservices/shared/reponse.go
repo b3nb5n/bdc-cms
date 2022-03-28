@@ -6,12 +6,17 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type Response[D, E any] struct {
-	Data D `json:"data,omitempty"`
-	Error E `json:"error,omitempty"`
+type ErrorResponse[T any] struct {
+	Global string `json:"global,omitempty"`
+	Body T `json:"body,omitempty"`
 }
 
-func SendResponse[D, E any](res Response[D, E], c *fiber.Ctx) error {
+type Response[D, E any] struct {
+	Data D `json:"data,omitempty"`
+	Error ErrorResponse[E] `json:"error,omitempty"`
+}
+
+func (res Response[_, _]) Send(c *fiber.Ctx) error {
 	data, err := json.Marshal(res)
 	if err != nil {
 		return c.SendStatus(500)

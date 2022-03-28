@@ -7,6 +7,7 @@ import (
 	"shared"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
 	"go.mongodb.org/mongo-driver/bson"
@@ -15,7 +16,7 @@ import (
 )
 
 type SigninBody struct {
-	Email string `json:"email" validate:"required,email"`
+	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required"`
 }
 
@@ -23,15 +24,42 @@ type SigninResponseData struct {
 	JWT string `json:"jwt"`
 }
 
-type SigninResponseError string
+type SigninResponseError struct {
+	Email    string `json:"email,omitempty"`
+	Password string `json:"password,omitempty"`
+}
 
-func Signin(db *mongo.Database) func (*fiber.Ctx) error {
+func Signin(db *mongo.Database) func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
+		res := new(shared.Response[SigninResponseData, SigninResponseError])
+
 		body := new(SigninBody)
 		c.BodyParser(&body)
 		err := validate.Struct(body)
 		if err != nil {
-			return c.SendStatus(400)
+			if _, ok := err.(*validator.InvalidValidationError); ok {
+				log.Println("SigninBody validation error")
+				return res.Send(c)
+			}
+
+			for _, err := range err.(validator.ValidationErrors) {
+				switch err.Field() {
+				case "Email":
+					if tag := err.Tag(); tag == "required" {
+						res.Error.Body.Email = "Email is required"
+					} else if tag == "email" {
+						res.Error.Body.Email = "Invalid email format"
+					}
+				case "Password":
+					if tag := err.Tag(); tag == "required" {
+						res.Error.Body.Password = "Password is required"
+					}
+				default:
+					res.Error.Global = "An unknown error occurred"
+				}
+			}
+
+			return res.Send(c)
 		}
 
 		queryCtx, cancelQueryCtx := context.WithTimeout(context.Background(), 6*time.Second)
@@ -64,15 +92,11 @@ func Signin(db *mongo.Database) func (*fiber.Ctx) error {
 		}
 
 		token := jwt.New(jwt.SigningMethodHS256)
-		tokenStr, err := token.SignedString([]byte(secret))
+		res.Data.JWT, err = token.SignedString([]byte(secret))
 		if err != nil {
 			return c.SendStatus(500)
 		}
 
-
-		res := shared.Response[SigninResponseData, SigninResponseError]{
-			Data: SigninResponseData{JWT: tokenStr},
-		}
-		return shared.SendResponse(res, c)
+		return res.Send(c)
 	}
 }

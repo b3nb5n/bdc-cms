@@ -14,14 +14,17 @@ import (
 
 type DeleteResponseData struct{}
 
-type DeleteResponseError string
+type DeleteResponseError struct{}
 
 func Delete(db *mongo.Database) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
+		res := shared.Response[DeleteResponseData, DeleteResponseError]{}
+
 		idParam := c.Params("id")
 		id, err := strconv.ParseInt(idParam, 10, 64)
 		if err != nil {
-			c.SendStatus(400)
+			res.Error.Global = "Invalid resource id"
+			res.Send(c.Status(400))
 		}
 
 		queryCtx, cancelQueryCtx := context.WithTimeout(context.Background(), 6*time.Second)
@@ -31,13 +34,12 @@ func Delete(db *mongo.Database) func(c *fiber.Ctx) error {
 		if err = queryResult.Err(); err != nil {
 			switch err {
 			case mongo.ErrNoDocuments:
-				return c.SendStatus(404)
+				return res.Send(c.Status(404))
 			default:
-				return c.SendStatus(500)
+				return res.Send(c.Status(500))
 			}
 		}
 
-		res := shared.Response[DeleteResponseData, DeleteResponseError]{}
-		return shared.SendResponse(res, c)
+		return res.Send(c)
 	}
 }

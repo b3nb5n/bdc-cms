@@ -18,29 +18,29 @@ type GetResponseError string
 
 func Get[T any](db *mongo.Database) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
+		res := shared.Response[GetResponseData[T], GetResponseError] {}
+
 		queryCtx, cancelQueryCtx := context.WithTimeout(context.Background(), 6*time.Second)
 		defer cancelQueryCtx()
 		collection := utils.ResolveCollection(c.Path())
 		queryResult, err := db.Collection(collection).Find(queryCtx, bson.M{})
 		if err != nil {
-			return c.SendStatus(500)
+			switch err {
+			case mongo.ErrNoDocuments:
+				return res.Send(c.Status(404))
+			default:
+				return res.Send(c.Status(500))
+			}
 		}
 		defer queryResult.Close(context.Background())
 
 		decodeCtx, cancelDecodeCtx := context.WithTimeout(context.Background(), time.Second)
 		defer cancelDecodeCtx()
-		data := new(GetResponseData[T])
-		err = queryResult.All(decodeCtx, data)
+		err = queryResult.All(decodeCtx, &res.Data)
 		if err != nil {
-			switch err {
-			case mongo.ErrNoDocuments:
-				return c.SendStatus(404)
-			default:
-				return c.SendStatus(500)
-			}
+			return res.Send(c.Status(500))
 		}
 
-		res := shared.Response[GetResponseData[T], GetResponseError] { Data: *data }
-		return shared.SendResponse(res, c)
+		return res.Send(c)
 	}
 }

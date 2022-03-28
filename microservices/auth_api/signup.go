@@ -14,19 +14,21 @@ import (
 
 var validate = validator.New()
 
-type SignupData struct {
+type SignupResponseData struct {
 	ID shared.Snowflake `json:"id"`
 }
 
-type SignupError string
+type SignupResponseError string
 
 func Signup(db *mongo.Database) func (*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
+		res := new(shared.Response[SignupResponseData, SignupResponseError])
+
 		data := new(UserData)
 		c.BodyParser(data)
 		err := validate.Struct(data)
 		if err != nil {
-			return c.SendStatus(400)
+			return res.Send(c.Status(400))
 		}
 
 
@@ -34,32 +36,32 @@ func Signup(db *mongo.Database) func (*fiber.Ctx) error {
 		defer cancelReadCtx()
 		readResult := db.Collection("users").FindOne(readCtx, bson.M{"data.email": data.Email})
 		if readResult.Err() != mongo.ErrNoDocuments {
-			return c.SendStatus(403)
+			return res.Send(c.Status(403))
 		}
 
 		hash, err := bcrypt.GenerateFromPassword([]byte(data.Password), bcrypt.DefaultCost)
 		if err != nil {
-			return c.SendStatus(500)
+			return res.Send(c.Status(500))
 		}
 
 		data.Password = string(hash)
 		user, err := shared.NewResource(*data)
 		if err != nil {
-			return c.SendStatus(500)
+			return res.Send(c.Status(500))
 		}
 
 		writeCtx, cancelWriteCtx := context.WithTimeout(context.Background(), 6*time.Second)
 		defer cancelWriteCtx()
 		writeResult, err := db.Collection("users").InsertOne(writeCtx, user)
 		if err != nil {
-			return c.SendStatus(500)
+			return res.Send(c.Status(500))
 		}
 
 		if id, ok := writeResult.InsertedID.(int64); ok {
-			res := shared.Response[SignupData, SignupError]{Data: SignupData{ID: shared.Snowflake(id)}}
-			return shared.SendResponse(res, c)
+			res.Data.ID = shared.Snowflake(id)
+			return res.Send(c)
 		}
 
-		return c.SendStatus(500)
+		return res.Send(c.Status(500))
 	}
 }
