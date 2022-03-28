@@ -32,12 +32,15 @@ func Get[T any](db *mongo.Database) func(c *fiber.Ctx) error {
 		data := new(GetResponseData[T])
 		err = queryResult.All(decodeCtx, data)
 		if err != nil {
-			return c.SendStatus(500)
+			switch err {
+			case mongo.ErrNoDocuments:
+				return c.SendStatus(404)
+			default:
+				return c.SendStatus(500)
+			}
 		}
 
-		res := shared.SuccessfulResponse[GetResponseData[T]] {
-			Data: *data,
-		}
-		return shared.SendResponse[GetResponseData[T], GetResponseError](res, c)
+		res := shared.Response[GetResponseData[T], GetResponseError] { Data: *data }
+		return shared.SendResponse(res, c)
 	}
 }

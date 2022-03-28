@@ -3,11 +3,11 @@ package resources
 import (
 	"content_api/utils"
 	"context"
-	"encoding/json"
 	"time"
 
 	"shared"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -18,13 +18,15 @@ type PostResponseData struct {
 
 type PostResponseError string
 
+var validate = validator.New()
+
 func Post[T any](db *mongo.Database) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		data := new(T)
-		err := json.Unmarshal(c.Body(), data)
+		c.BodyParser(&data)
+		err := validate.Struct(data)
 		if err != nil {
-			res := shared.ErrorResponse[PostResponseError]{Error: "Invalid Body"}
-			return shared.SendResponse[PostResponseData, PostResponseError](res, c)
+			return c.SendStatus(400)
 		}
 
 		resource, err := shared.NewResource(*data)
@@ -37,12 +39,17 @@ func Post[T any](db *mongo.Database) func(c *fiber.Ctx) error {
 		collection := utils.ResolveCollection(c.Path())
 		_, err = db.Collection(collection).InsertOne(ctx, resource)
 		if err != nil {
-			return c.SendStatus(500)
+			switch err {
+			case mongo.ErrNoDocuments:
+				return c.SendStatus(404)
+			default:
+				return c.SendStatus(500)
+			}
 		}
 
-		res := shared.SuccessfulResponse[PostResponseData]{
+		res := shared.Response[PostResponseData, any]{
 			Data: PostResponseData{ID: resource.ID},
 		}
-		return shared.SendResponse[PostResponseData, PostResponseError](res, c)
+		return shared.SendResponse(res, c)
 	}
 }

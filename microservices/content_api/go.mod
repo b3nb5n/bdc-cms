@@ -9,7 +9,10 @@ require (
 
 require (
 	github.com/DataDog/zstd v1.5.0 // indirect
+	github.com/go-playground/locales v0.14.0 // indirect
+	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/google/go-cmp v0.5.7 // indirect
+	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/stretchr/testify v1.7.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/xdg/scram v1.0.5 // indirect
@@ -19,6 +22,7 @@ require (
 
 require (
 	github.com/andybalholm/brotli v1.0.4 // indirect
+	github.com/go-playground/validator/v10 v10.10.1
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/joho/godotenv v1.4.0
