@@ -20,7 +20,7 @@ type SignupData struct {
 
 type SignupError string
 
-func Signup(db *mongo.Database) func (c *fiber.Ctx) error {
+func Signup(db *mongo.Database) func (*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		data := new(UserData)
 		c.BodyParser(data)

@@ -33,6 +33,7 @@ func main() {
 	app := fiber.New()
 
 	app.Post("/signup", Signup(db))
+	app.Get("/signin", Signin(db))
 
 	app.Listen(":3000")
 }
