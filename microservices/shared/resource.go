@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Visibility int
@@ -33,22 +36,21 @@ func (meta *ResourceMeta) MarshalJSON() ([]byte, error) {
 	type Alias ResourceMeta
 	return json.Marshal(&struct {
 		*Alias
-		Created int64 `bson:"created" json:"created"`
-		Edited int64 `bson:"edited" json:"edited"`
+		Created int64 `json:"created"`
+		Edited int64 `json:"edited"`
 	} {
 		Alias: (*Alias)(meta),
 		Created: meta.Created.Unix(),
-		Edited: meta.Created.Unix(),
+		Edited: meta.Edited.Unix(),
 	})
 }
 
 func (meta *ResourceMeta) UnmarshalJSON(data []byte) error {
-	fmt.Println(string(data))
 	type Alias ResourceMeta
 	aux := &struct {
 		*Alias
-		Created int64 `bson:"created" json:"created"`
-		Edited int64 `bson:"edited" json:"edited"`
+		Created int64 `json:"created"`
+		Edited int64 `json:"edited"`
 	} {
 		Alias: (*Alias)(meta),
 	}
@@ -60,6 +62,39 @@ func (meta *ResourceMeta) UnmarshalJSON(data []byte) error {
 
 	meta.Created = time.Unix(aux.Created, 0)
 	meta.Edited = time.Unix(aux.Edited, 0)
+	return nil
+}
+
+func (meta *ResourceMeta) MarshalBSON() ([]byte, error) {
+	type Alias ResourceMeta
+	return bson.Marshal(&struct {
+		*Alias
+		Created primitive.DateTime `bson:"created"`
+		Edited primitive.DateTime `bson:"edited"`
+	} {
+		Alias: (*Alias)(meta),
+		Created: primitive.NewDateTimeFromTime(meta.Created),
+		Edited: primitive.NewDateTimeFromTime(meta.Edited),
+	})
+}
+
+func (meta *ResourceMeta) UnmarshalBSON(data []byte) error {
+	type Alias ResourceMeta
+	aux := &struct {
+		*Alias
+		Created primitive.DateTime `bson:"created"`
+		Edited primitive.DateTime `bson:"edited"`
+	} {
+		Alias: (*Alias)(meta),
+	}
+
+	err := bson.Unmarshal(data, &aux)
+	if err != nil {
+		return err
+	}
+
+	meta.Created = aux.Created.Time()
+	meta.Edited = aux.Edited.Time()
 	return nil
 }
 
