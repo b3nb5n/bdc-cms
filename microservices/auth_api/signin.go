@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 	"shared"
 	"time"
@@ -21,45 +20,22 @@ type SigninBody struct {
 }
 
 type SigninResponseData struct {
-	JWT string `json:"jwt"`
-}
-
-type SigninResponseError struct {
-	Email    string `json:"email,omitempty"`
-	Password string `json:"password,omitempty"`
+	JWT string `json:"jwt,omitempty"`
 }
 
 func Signin(db *mongo.Database) func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-		res := new(shared.Response[SigninResponseData, SigninResponseError])
+		res := new(shared.Response[SigninResponseData])
 
 		body := new(SigninBody)
 		c.BodyParser(&body)
 		err := validate.Struct(body)
 		if err != nil {
 			if _, ok := err.(*validator.InvalidValidationError); ok {
-				log.Println("SigninBody validation error")
-				return res.Send(c)
+				return c.SendStatus(500)
 			}
 
-			for _, err := range err.(validator.ValidationErrors) {
-				switch err.Field() {
-				case "Email":
-					if tag := err.Tag(); tag == "required" {
-						res.Error.Body.Email = "Email is required"
-					} else if tag == "email" {
-						res.Error.Body.Email = "Invalid email format"
-					}
-				case "Password":
-					if tag := err.Tag(); tag == "required" {
-						res.Error.Body.Password = "Password is required"
-					}
-				default:
-					res.Error.Global = "An unknown error occurred"
-				}
-			}
-
-			return res.Send(c)
+			return c.SendStatus(400)
 		}
 
 		queryCtx, cancelQueryCtx := context.WithTimeout(context.Background(), 6*time.Second)
@@ -68,7 +44,8 @@ func Signin(db *mongo.Database) func(*fiber.Ctx) error {
 		if err = queryResult.Err(); err != nil {
 			switch err {
 			case mongo.ErrNoDocuments:
-				return c.SendStatus(404)
+				res.Error = "No accounts associated with this email"
+				return res.Send(c.Status(404))
 			default:
 				return c.SendStatus(500)
 			}
@@ -82,13 +59,14 @@ func Signin(db *mongo.Database) func(*fiber.Ctx) error {
 
 		err = bcrypt.CompareHashAndPassword([]byte(user.Data.Password), []byte(body.Password))
 		if err != nil {
-			return c.SendStatus(400)
+			res.Error = "Wrong password"
+			return res.Send(c.Status(401))
 		}
 
 		secret := os.Getenv("JWT_SECRET")
 		if secret == "" {
-			c.SendStatus(500)
-			log.Fatalln("No configured jwt secret")
+			res.Send(c.Status(500))
+			panic("No configured jwt secret")
 		}
 
 		token := jwt.New(jwt.SigningMethodHS256)

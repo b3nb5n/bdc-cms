@@ -18,7 +18,7 @@ type GetResponseError string
 
 func Get[T any](db *mongo.Database) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-		res := shared.Response[GetResponseData[T], GetResponseError] {}
+		res := new(shared.Response[GetResponseData[T]])
 
 		queryCtx, cancelQueryCtx := context.WithTimeout(context.Background(), 6*time.Second)
 		defer cancelQueryCtx()

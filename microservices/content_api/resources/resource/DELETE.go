@@ -18,12 +18,11 @@ type DeleteResponseError struct{}
 
 func Delete(db *mongo.Database) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-		res := shared.Response[DeleteResponseData, DeleteResponseError]{}
+		res := new(shared.Response[DeleteResponseData])
 
 		idParam := c.Params("id")
 		id, err := strconv.ParseInt(idParam, 10, 64)
 		if err != nil {
-			res.Error.Global = "Invalid resource id"
 			res.Send(c.Status(400))
 		}
 

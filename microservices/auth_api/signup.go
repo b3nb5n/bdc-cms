@@ -18,43 +18,51 @@ type SignupResponseData struct {
 	ID shared.Snowflake `json:"id"`
 }
 
-type SignupResponseError string
+type SignupResponseError struct {
+	FirstName string `json:"firstName,omitempty"`
+	LastName  string `json:"lastName,omitempty"`
+	Email     string `json:"email,omitempty"`
+	Password  string `json:"password,omitempty"`
+}
 
-func Signup(db *mongo.Database) func (*fiber.Ctx) error {
+func Signup(db *mongo.Database) func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-		res := new(shared.Response[SignupResponseData, SignupResponseError])
+		res := new(shared.Response[SignupResponseData])
 
 		data := new(UserData)
 		c.BodyParser(data)
 		err := validate.Struct(data)
 		if err != nil {
-			return res.Send(c.Status(400))
-		}
+			if _, ok := err.(*validator.InvalidValidationError); ok {
+				return c.SendStatus(500)
+			}
 
+			return c.SendStatus(400)
+		}
 
 		readCtx, cancelReadCtx := context.WithTimeout(context.Background(), 6*time.Second)
 		defer cancelReadCtx()
 		readResult := db.Collection("users").FindOne(readCtx, bson.M{"data.email": data.Email})
 		if readResult.Err() != mongo.ErrNoDocuments {
-			return res.Send(c.Status(403))
+			return c.SendStatus(409)
 		}
 
 		hash, err := bcrypt.GenerateFromPassword([]byte(data.Password), bcrypt.DefaultCost)
 		if err != nil {
-			return res.Send(c.Status(500))
+			return c.SendStatus(500)
 		}
 
 		data.Password = string(hash)
 		user, err := shared.NewResource(*data)
 		if err != nil {
-			return res.Send(c.Status(500))
+			return c.SendStatus(500)
 		}
 
 		writeCtx, cancelWriteCtx := context.WithTimeout(context.Background(), 6*time.Second)
 		defer cancelWriteCtx()
 		writeResult, err := db.Collection("users").InsertOne(writeCtx, user)
 		if err != nil {
-			return res.Send(c.Status(500))
+			return c.SendStatus(500)
 		}
 
 		if id, ok := writeResult.InsertedID.(int64); ok {
@@ -62,6 +70,6 @@ func Signup(db *mongo.Database) func (*fiber.Ctx) error {
 			return res.Send(c)
 		}
 
-		return res.Send(c.Status(500))
+		return c.SendStatus(500)
 	}
 }

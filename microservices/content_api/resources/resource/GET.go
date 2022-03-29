@@ -19,7 +19,7 @@ type GetResponseError string
 
 func Get[T any](db *mongo.Database) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-		res := new(shared.Response[GetResponseData[T], GetResponseError])
+		res := new(shared.Response[GetResponseData[T]])
 
 		idParam := c.Params("id")
 		id, err := strconv.ParseInt(idParam, 10, 64)

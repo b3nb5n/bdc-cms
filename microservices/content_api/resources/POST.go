@@ -22,7 +22,7 @@ var validate = validator.New()
 
 func Post[T any](db *mongo.Database) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-		res := new(shared.Response[PostResponseData, PostResponseError])
+		res := new(shared.Response[PostResponseData])
 
 		data := new(T)
 		c.BodyParser(&data)
@@ -45,19 +45,6 @@ func Post[T any](db *mongo.Database) func(c *fiber.Ctx) error {
 		}
 
 		res.Data.ID = resource.ID
-		return res.Send(c)
+		return res.Send(c.Status(201))
 	}
 }
-
-// Not included
-// Yes, government spending
-// Not included
-// Yes, consumer spending
-// Yes, investment
-// Yes, consumer spending
-// Yes, consumer spending
-// Yes, imports/net spending
-// Not included
-// Yes included, investment?
-// Yes included, consumer spending
-// Yes included, imports/gov’t spending
