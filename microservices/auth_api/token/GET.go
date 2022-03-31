@@ -1,10 +1,12 @@
-package main
+package token
 
 import (
 	"context"
 	"os"
 	"shared"
 	"time"
+
+	"auth_api/users"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -14,20 +16,15 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type SigninBody struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required"`
-}
-
-type SigninResponseData struct {
+type GetResponseData struct {
 	JWT string `json:"jwt,omitempty"`
 }
 
-func Signin(db *mongo.Database) func(*fiber.Ctx) error {
+func Get(db *mongo.Database) func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-		res := new(shared.Response[SigninResponseData])
+		res := new(shared.Response[GetResponseData])
 
-		body := new(SigninBody)
+		body := new(Credential)
 		c.BodyParser(&body)
 		err := validate.Struct(body)
 		if err != nil {
@@ -51,7 +48,7 @@ func Signin(db *mongo.Database) func(*fiber.Ctx) error {
 			}
 		}
 
-		user := new(User)
+		user := new(users.User)
 		err = queryResult.Decode(&user)
 		if err != nil {
 			return c.SendStatus(500)
@@ -69,7 +66,12 @@ func Signin(db *mongo.Database) func(*fiber.Ctx) error {
 			panic("No configured jwt secret")
 		}
 
-		token := jwt.New(jwt.SigningMethodHS256)
+		payload := Payload{
+			UID: user.ID,
+			Email: user.Data.Email,
+		}
+
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, &payload)
 		res.Data.JWT, err = token.SignedString([]byte(secret))
 		if err != nil {
 			return c.SendStatus(500)

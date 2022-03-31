@@ -1,9 +1,11 @@
-package main
+package users
 
 import (
 	"encoding/json"
 	"shared"
 	"strings"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type UserData struct {
@@ -32,3 +34,5 @@ func (user *UserData) UnmarshalJSON(data []byte) error {
 	user.Email = strings.ToLower(aux.Email)
 	return nil
 }
+
+var validate = validator.New()

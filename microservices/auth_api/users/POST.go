@@ -1,4 +1,4 @@
-package main
+package users
 
 import (
 	"context"
@@ -12,22 +12,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var validate = validator.New()
-
-type SignupResponseData struct {
+type PostResponseData struct {
 	ID shared.Snowflake `json:"id"`
 }
 
-type SignupResponseError struct {
-	FirstName string `json:"firstName,omitempty"`
-	LastName  string `json:"lastName,omitempty"`
-	Email     string `json:"email,omitempty"`
-	Password  string `json:"password,omitempty"`
-}
-
-func Signup(db *mongo.Database) func(*fiber.Ctx) error {
+func Post(db *mongo.Database) func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-		res := new(shared.Response[SignupResponseData])
+		res := new(shared.Response[PostResponseData])
 
 		data := new(UserData)
 		c.BodyParser(data)

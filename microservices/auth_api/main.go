@@ -9,6 +9,11 @@ import (
 
 	"shared"
 
+	"auth_api/token"
+	"auth_api/users"
+	"auth_api/users/me"
+	"auth_api/users/user"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
 )
@@ -32,8 +37,11 @@ func main() {
 	db := client.Database("auth")
 	app := fiber.New()
 
-	app.Post("/signup", Signup(db))
-	app.Get("/signin", Signin(db))
+	app.Post("/user", users.Post(db))
+	app.Get("/user/me", me.Get(db))
+	app.Get("/user/:id", user.Get(db))
+
+	app.Get("/token", token.Get(db))
 
 	app.Listen(":3000")
 }
