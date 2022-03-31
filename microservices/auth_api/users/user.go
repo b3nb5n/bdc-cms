@@ -12,7 +12,7 @@ type UserData struct {
 	FirstName string `bson:"firstName" json:"firstName" valdiate:"required"`
 	LastName string `bson:"lastName" json:"lastName" validate:"required"`
 	Email string `bson:"email" json:"email" validate:"required,email"`
-	Password string `bson:"password" json:"password" validate:"required"`
+	Password string `bson:"password" json:"-" validate:"required"`
 }
 
 type User shared.Resource[UserData]
@@ -22,6 +22,7 @@ func (user *UserData) UnmarshalJSON(data []byte) error {
 	aux := &struct {
 		*Alias
 		Email string `json:"email"`
+		Password string `json:"password"`
 	} {
 		Alias: (*Alias)(user),
 	}
@@ -32,6 +33,7 @@ func (user *UserData) UnmarshalJSON(data []byte) error {
 	}
 
 	user.Email = strings.ToLower(aux.Email)
+	user.Password = aux.Password
 	return nil
 }
 

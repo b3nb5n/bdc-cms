@@ -66,12 +66,8 @@ func Get(db *mongo.Database) func(*fiber.Ctx) error {
 			panic("No configured jwt secret")
 		}
 
-		payload := Payload{
-			UID: user.ID,
-			Email: user.Data.Email,
-		}
-
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, &payload)
+		payload := NewPayload(user.ID, time.Hour * 24 * 7)
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
 		res.Data.JWT, err = token.SignedString([]byte(secret))
 		if err != nil {
 			return c.SendStatus(500)

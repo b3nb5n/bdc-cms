@@ -5,24 +5,27 @@ import (
 	"fmt"
 	"os"
 	"shared"
-	"strconv"
+	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 )
 
 type Payload struct {
-	UID shared.Snowflake `validate:"required"`
-	Email string `json:"email" validate:"required,email"`
+	IssuedAt time.Time `json:"iat"`
+	ExpiresAt time.Time `json:"exp"`
+	Subject shared.Snowflake `json:"sub"`
 }
 
 func (payload *Payload) MarshalJSON() (data []byte, err error) {
 	type Alias Payload
 	return json.Marshal(struct{
 		*Alias
-		UID string `json:"uid"`
+		IssuedAt int64 `json:"iat"`
+		ExipresAt int64 `json:"exp"`
 	}{
-		UID: strconv.FormatInt(int64(payload.UID), 10),
 		Alias: (*Alias)(payload),
+		IssuedAt: payload.IssuedAt.Unix(),
+		ExipresAt: payload.ExpiresAt.Unix(),
 	})
 }
 
@@ -30,7 +33,8 @@ func (payload *Payload) UnmarshalJSON(data []byte) error {
 	type Alias Payload
 	aux := &struct{
 		*Alias
-		UID string `json:"uid"`
+		IssuedAt int64 `json:"iat"`
+		ExipresAt int64 `json:"exp"`
 	}{
 		Alias: (*Alias)(payload),
 	}
@@ -40,13 +44,21 @@ func (payload *Payload) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	uid, err := strconv.ParseInt(aux.UID, 10, 64)
-	payload.UID = shared.Snowflake(uid)
+	payload.IssuedAt = time.Unix(aux.IssuedAt, 0)
+	payload.ExpiresAt = time.Unix(aux.ExipresAt, 0)
 	return err
 }
 
 func (payload *Payload) Valid() error {
 	return nil
+}
+
+func NewPayload(sub shared.Snowflake, ttl time.Duration) *Payload {
+	return &Payload{
+		IssuedAt: time.Now(),
+		ExpiresAt: time.Now().Add(ttl),
+		Subject: sub,
+	}
 }
 
 func ParsePayload(jwtString string) (payload Payload, err error) {
