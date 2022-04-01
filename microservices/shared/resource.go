@@ -19,7 +19,6 @@ const (
 )
 
 type ResourceMeta struct {
-	Created time.Time `bson:"created" json:"created"`
 	Edited time.Time `bson:"edited" json:"edited"`
 	Visibility Visibility `bson:"visibility" json:"visibility"`
 }
@@ -27,7 +26,6 @@ type ResourceMeta struct {
 func NewResourceMeta() *ResourceMeta {
 	now := time.Now()
 	return &ResourceMeta{
-		Created: now,
 		Edited: now,
 	}
 }
@@ -36,11 +34,9 @@ func (meta *ResourceMeta) MarshalJSON() ([]byte, error) {
 	type Alias ResourceMeta
 	return json.Marshal(&struct {
 		*Alias
-		Created int64 `json:"created"`
 		Edited int64 `json:"edited"`
 	} {
 		Alias: (*Alias)(meta),
-		Created: meta.Created.Unix(),
 		Edited: meta.Edited.Unix(),
 	})
 }
@@ -49,7 +45,6 @@ func (meta *ResourceMeta) UnmarshalJSON(data []byte) error {
 	type Alias ResourceMeta
 	aux := &struct {
 		*Alias
-		Created int64 `json:"created"`
 		Edited int64 `json:"edited"`
 	} {
 		Alias: (*Alias)(meta),
@@ -60,20 +55,17 @@ func (meta *ResourceMeta) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	meta.Created = time.Unix(aux.Created, 0)
 	meta.Edited = time.Unix(aux.Edited, 0)
-	return nil
+	return err
 }
 
 func (meta *ResourceMeta) MarshalBSON() ([]byte, error) {
 	type Alias ResourceMeta
 	return bson.Marshal(&struct {
 		*Alias
-		Created primitive.DateTime `bson:"created"`
 		Edited primitive.DateTime `bson:"edited"`
 	} {
 		Alias: (*Alias)(meta),
-		Created: primitive.NewDateTimeFromTime(meta.Created),
 		Edited: primitive.NewDateTimeFromTime(meta.Edited),
 	})
 }
@@ -82,7 +74,6 @@ func (meta *ResourceMeta) UnmarshalBSON(data []byte) error {
 	type Alias ResourceMeta
 	aux := &struct {
 		*Alias
-		Created primitive.DateTime `bson:"created"`
 		Edited primitive.DateTime `bson:"edited"`
 	} {
 		Alias: (*Alias)(meta),
@@ -93,9 +84,8 @@ func (meta *ResourceMeta) UnmarshalBSON(data []byte) error {
 		return err
 	}
 
-	meta.Created = aux.Created.Time()
 	meta.Edited = aux.Edited.Time()
-	return nil
+	return err
 }
 
 type Resource[T any] struct {

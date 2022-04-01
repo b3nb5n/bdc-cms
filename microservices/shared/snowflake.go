@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	TIMESTAMP_BITS = 41
-	WORKER_ID_BITS = 7
+	TIMESTAMP_BITS = 40
+	WORKER_ID_BITS = 8
 	RANDOM_BITS  = 16
 )
 
@@ -54,4 +54,9 @@ func NewSnowflake() (Snowflake, error) {
 	random := src.Int63() & (1 << RANDOM_BITS - 1)
 
 	return Snowflake(timestamp | workerId | random), err
+}
+
+func (snowflake Snowflake) IssuedAt() time.Time {
+	ms := time.Duration(snowflake >> (WORKER_ID_BITS + RANDOM_BITS))
+	return Epoch.Add(ms * time.Millisecond)
 }

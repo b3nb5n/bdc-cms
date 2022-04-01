@@ -16,6 +16,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type Credential struct {
+	Email string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required"`
+}
 type GetResponseData struct {
 	JWT string `json:"jwt,omitempty"`
 }

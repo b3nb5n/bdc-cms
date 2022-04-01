@@ -17,6 +17,6 @@ func Get(db *mongo.Database) func (*fiber.Ctx) error {
 			return c.SendStatus(400)
 		}
 
-		return c.Redirect(fmt.Sprintf("/user/%v", payload.Subject), fiber.StatusSeeOther)
+		return c.Redirect(fmt.Sprintf("/users/%v", payload.UID), fiber.StatusSeeOther)
 	}
 }

@@ -37,9 +37,9 @@ func main() {
 	db := client.Database("auth")
 	app := fiber.New()
 
-	app.Post("/user", users.Post(db))
-	app.Get("/user/me", me.Get(db))
-	app.Get("/user/:id", user.Get(db))
+	app.Post("/users", users.Post(db))
+	app.Get("/users/me", me.Get(db))
+	app.Get("/users/:id", user.Get(db))
 
 	app.Get("/token", token.Get(db))
 
