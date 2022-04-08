@@ -45,5 +45,10 @@ func main() {
 	app.Get("/collections/:id", resource.Get[resources.CollectionData](db))
 	app.Delete("/collections/:id", resource.Delete(db))
 
+	app.Post("/items", resources.Post[resources.ItemData](db))
+	app.Get("/items", resources.Get[resources.ItemData](db))
+	app.Get("/items/:id", resource.Get[resources.ItemData](db))
+	app.Delete("/items/:id", resource.Delete(db))
+
 	app.Listen(":3000")
 }

@@ -14,8 +14,6 @@ import (
 
 type DeleteResponseData struct{}
 
-type DeleteResponseError struct{}
-
 func Delete(db *mongo.Database) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		res := new(shared.Response[DeleteResponseData])

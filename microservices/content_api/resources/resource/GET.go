@@ -15,8 +15,6 @@ import (
 
 type GetResponseData[T any] shared.Resource[T]
 
-type GetResponseError string
-
 func Get[T any](db *mongo.Database) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		res := new(shared.Response[GetResponseData[T]])

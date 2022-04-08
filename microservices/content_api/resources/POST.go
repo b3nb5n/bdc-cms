@@ -16,8 +16,6 @@ type PostResponseData struct {
 	ID shared.Snowflake `json:"id,omitempty"`
 }
 
-type PostResponseError string
-
 var validate = validator.New()
 
 func Post[T any](db *mongo.Database) func(c *fiber.Ctx) error {
